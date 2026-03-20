@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: finance_db
+    restart: always
+    environment:
+      POSTGRES_USER: user_power
+      POSTGRES_PASSWORD: senha_forte
+      POSTGRES_DB: powertrack_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    container_name: powertrack_backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql://user_power:senha_forte@db:5432/powertrack_db
+      - PYTHONPATH=/app
+      
+  frontend:
+    build: ./frontend
+    container_name: powertrack_frontend
+    ports:
+      - "8080:8080"  # Mudamos para 8080 para bater com o ui.run do seu código
+    depends_on:
+      - backend
+    environment:
+      - BACKEND_URL=http://powertrack_backend:8000 # Nome do serviço acima
+
+volumes:
+  pgdata:
